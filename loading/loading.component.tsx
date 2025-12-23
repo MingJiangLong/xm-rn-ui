@@ -1,5 +1,5 @@
 import { FC, useEffect, useState, PropsWithChildren, useRef } from "react";
-import { Modal } from "./modal.component";
+import { Modal } from "../modal/modal.component";
 import { DeviceEventEmitter, StyleProp, ViewStyle, } from "react-native";
 import React from 'react'
 interface I_Loading extends FC<PropsWithChildren<
@@ -64,11 +64,11 @@ const Loading: I_Loading = (props) => {
 
 
     function addListener() {
-        showLog && console.log(`[Loading]:已加载`);
+        showLog && console.log(`[xm-rn-ui]:组件Loading已加载`);
         const openSub = DeviceEventEmitter.addListener(buildOpenName(id), openLoading)
         const closeSub = DeviceEventEmitter.addListener(buildCloseName(id), closeLoading)
         return () => {
-            showLog && console.log("[Loading]:已卸载");
+            showLog && console.log("[xm-rn-ui]:组件Loading已卸载");
             openSub.remove()
             closeSub.remove()
         }

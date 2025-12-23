@@ -1,0 +1,1 @@
+export const SDK_NAME = "xm-rn-ui"

@@ -10,7 +10,7 @@ type I_TextInputProps = {
 } & Omit<TextInputProps, "style">
 export default function TextInput(props: I_TextInputProps) {
 
-    const { inputStyle, onBlur, onFocus, ...rest } = props
+    const { inputStyle, containerStyle, onBlur, onFocus, ...rest } = props
 
     const [focused, setFocused] = useState(false)
 
@@ -32,9 +32,16 @@ export default function TextInput(props: I_TextInputProps) {
         return inputStyle
     }, [inputStyle, focused])
 
+    const containerMemo = useMemo(() => {
+        if (typeof containerStyle === "function") {
+            return containerStyle({ focused })
+        }
+        return containerStyle
+    }, [containerStyle, focused])
+
 
     return (
-        <View style={{ flexDirection: 'row', columnGap: 8, alignItems: 'center' }}>
+        <View style={[{ flexDirection: 'row', columnGap: 8, alignItems: 'center' }, containerMemo]}>
             {props.prefix}
             <RnTextInput
                 {...rest}

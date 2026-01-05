@@ -84,11 +84,11 @@ const Notice: I_Notice = (props) => {
     }
 
     function addListener() {
-        showLog && console.log("[xm-rn-ui]:组件Notice已加载");
+        showLog && console.log("[Notice]:已加载");
         const openSub = DeviceEventEmitter.addListener(buildOpenName(id), openNotice)
         const closeSub = DeviceEventEmitter.addListener(buildCloseName(id), closeNotice)
         return () => {
-            showLog && console.log("[xm-rn-ui]:组件Notice已移除");
+            showLog && console.log("[Notice]:已移除");
             openSub.remove()
             closeSub.remove()
         }
@@ -102,7 +102,7 @@ const Notice: I_Notice = (props) => {
 
     }, [message])
     return (
-        <Modal show={show} modalContainerStyle={[modalContainerStyle, moreModalContainerStyle]} >
+        <Modal show={show} modalContainerStyle={[modalContainerStyle, moreModalContainerStyle]} ignoreKeyboardHeight={true}>
             {childrenNode}
         </Modal>
     )

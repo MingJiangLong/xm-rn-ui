@@ -1,7 +1,7 @@
-import { createContext, FC, PropsWithChildren, useEffect, useState } from "react";
+import { createContext, FC, PropsWithChildren, use, useEffect, useRef, useState } from "react";
 import { Host, Portal } from "react-native-portalize";
 import React from 'react'
-import { ViewStyle, StyleProp, Keyboard, DeviceEventEmitter, StyleSheet } from "react-native";
+import { ViewStyle, StyleProp, Keyboard, DeviceEventEmitter, StyleSheet, useWindowDimensions, ScrollView, TouchableWithoutFeedback } from "react-native";
 import Animated, { AnimatableValue, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { runOnJS } from 'react-native-worklets'
 const OPEN_OBSERVER_MODAL = "__OPEN_OBSERVER_MODAL__"
@@ -67,25 +67,15 @@ const ObserverModalFn: I_ObserverModal = function (props) {
     const [show, setShow] = useState(false)
     const [moreModalContainerStyle, setMoreModalContainerStyle] = useState<StyleProp<ViewStyle>>([])
     const [childrenNode, setChildrenNode] = useState<React.ReactNode>(undefined)
-    const opacity = useSharedValue(0);
     const open: I_ObserverModal["open"] = function (options) {
         const { children, moreModalContainerStyle } = options
         setMoreModalContainerStyle(moreModalContainerStyle)
         setChildrenNode(children)
         setShow(true)
-        opacity.value = withSpring(1)
     }
 
-    const closeCallback = (
-        finished?: boolean,
-    ) => {
-        if (!finished) return;
-        setShow(false)
-    }
     const close: I_ObserverModal["close"] = function () {
-        opacity.value = withSpring(0, {}, (finished) => {
-            runOnJS(closeCallback)(finished)
-        })
+        setShow(false)
     }
 
     const addListener = function () {
@@ -98,25 +88,12 @@ const ObserverModalFn: I_ObserverModal = function (props) {
         }
     }
 
-    const animatedStyle = useAnimatedStyle(() => {
-        return {
-            opacity: opacity.value
-        }
-    })
 
     useEffect(addListener, [])
     return (
-        <>
-            {
-                !!show && (
-                    <Portal>
-                        <Animated.View style={[styles.modalContainer, animatedStyle, modalContainerStyle, moreModalContainerStyle,]}>
-                            {childrenNode}
-                        </Animated.View>
-                    </Portal>
-                )
-            }
-        </>
+        <Modal show={show} modalContainerStyle={[styles.modalContainer, modalContainerStyle, moreModalContainerStyle,]}>
+            {childrenNode}
+        </Modal>
     )
 
 }
@@ -154,20 +131,48 @@ export const ObserverModal = ObserverModalFn
 interface I_ModalProps {
     show?: boolean
     onClose?: () => void
+
+    /** 有些modal可能不需要计算键盘高度 */
+    ignoreKeyboardHeight?: boolean
+
     modalContainerStyle?: StyleProp<ViewStyle>
 }
 export function Modal(props: PropsWithChildren<I_ModalProps>) {
 
-    const { children, show, modalContainerStyle } = props;
+    const { children, show, modalContainerStyle, ignoreKeyboardHeight } = props;
     const opacity = useSharedValue(0);
+    const { height: windowHeight } = useWindowDimensions()
+    const viewPaddingBottom = useSharedValue(0)
+    const [keyboardHeight, setKeyboardHeight] = useState(0)
+    const [showModal, setShowModal] = useState(false);
+
     const animatedStyles = useAnimatedStyle(() => ({
-        opacity: opacity.value
+        opacity: opacity.value,
+        height: windowHeight,
+        paddingBottom: ignoreKeyboardHeight ? 0 : viewPaddingBottom.value
     }));
 
-    const [showModal, setShowModal] = useState(false);
+    useEffect(() => {
+        const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (e) => {
+            setKeyboardHeight(e.endCoordinates.height);
+            viewPaddingBottom.value = withSpring(e.endCoordinates.height)
+        });
+        const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+            setKeyboardHeight(0)
+            viewPaddingBottom.value = withSpring(0)
+        });
+
+        return () => {
+            keyboardDidShowListener.remove();
+            keyboardDidHideListener.remove();
+        };
+    }, []);
+
     const onModalOpened = () => {
         setShowModal(true)
-        opacity.value = withSpring(1)
+        requestAnimationFrame(() => {
+            opacity.value = withSpring(1)
+        })
     }
 
     const closeCallback = (
@@ -178,7 +183,7 @@ export function Modal(props: PropsWithChildren<I_ModalProps>) {
         setShowModal(false)
     }
     const onModalClosed = () => {
-        opacity.value = withSpring(1, {}, (finished, current) => {
+        opacity.value = withSpring(0, {}, (finished, current) => {
             runOnJS(closeCallback)(finished, current)
         })
     }
@@ -197,14 +202,24 @@ export function Modal(props: PropsWithChildren<I_ModalProps>) {
             })
         }
     }, [show])
+
+
     return (
         <>
             {
                 !!showModal && (
                     <Portal>
-                        <Animated.View style={[styles.modalContainer, modalContainerStyle, animatedStyles]}>
-                            {children}
-                        </Animated.View>
+                        <ScrollView
+                            keyboardShouldPersistTaps="always"
+                            contentContainerStyle={{ paddingBottom: ignoreKeyboardHeight ? 0 : keyboardHeight }}
+                            bounces={false}
+                        >
+                            <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+                                <Animated.View style={[animatedStyles, styles.modalContainer, modalContainerStyle,]}>
+                                    {children}
+                                </Animated.View>
+                            </TouchableWithoutFeedback>
+                        </ScrollView>
                     </Portal>
                 )
             }

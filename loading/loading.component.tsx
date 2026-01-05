@@ -77,7 +77,7 @@ const Loading: I_Loading = (props) => {
     useEffect(addListener, [])
     useEffect(onLoadingCountChange, [loadingCount])
     return (
-        <Modal show={loading} modalContainerStyle={modalContainerStyle}>
+        <Modal show={loading} modalContainerStyle={modalContainerStyle} ignoreKeyboardHeight>
             {children}
         </Modal>
     )

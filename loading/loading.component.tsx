@@ -1,7 +1,6 @@
 import { FC, useEffect, useState, PropsWithChildren, useRef } from "react";
 import { Modal } from "../modal/modal.component";
 import { DeviceEventEmitter, StyleProp, ViewStyle, } from "react-native";
-import React from 'react'
 interface I_Loading extends FC<PropsWithChildren<
     {
         id?: string
@@ -108,6 +107,5 @@ export function addLoading<T extends (...args: any[]) => Promise<any>>(fn: T, id
         }
     }
 }
-
 
 export default Loading

@@ -22,11 +22,6 @@ export default function Button(props: I_ButtonProps) {
         }
         return title
     }, [children, textStyle])
-
-
-    console.log(containerStyle);
-
-
     return (
         <TouchableOpacity
             style={[{ justifyContent: "center", alignItems: 'center' }, containerStyle]}

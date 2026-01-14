@@ -11,7 +11,7 @@ interface I_Loading extends FC<PropsWithChildren<
 >> {
     open: (id?: string) => void
     close: (id?: string) => void
-    add: <T extends (...args: any[]) => Promise<any>>(fn: T, id?: string) => void
+    add: <T extends (...args: any[]) => Promise<any>>(fn: T, id?: string) => (...args: Parameters<T>) => Promise<ReturnType<T>>
 }
 const OPEN_LOADING = "OPEN_LOADING"
 const CLOSE_LOADING = "CLOSE_LOADING"

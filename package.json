@@ -6,6 +6,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npx rollup -c"
   },
+  "private": true,
   "author": "",
   "license": "ISC",
   "description": "",
@@ -38,5 +39,8 @@
     "rollup": "^4.55.1",
     "tslib": "^2.8.1",
     "typescript": "^5.9.3"
+  },
+  "resolutions": {
+    "xm_2025_q1_1": "portal:/Users/nengjingguo/Desktop/company-project/xm_2025_q1_1"
   }
 }

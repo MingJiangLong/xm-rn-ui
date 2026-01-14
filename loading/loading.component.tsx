@@ -11,6 +11,7 @@ interface I_Loading extends FC<PropsWithChildren<
 >> {
     open: (id?: string) => void
     close: (id?: string) => void
+    add: <T extends (...args: any[]) => Promise<any>>(fn: T, id?: string) => void
 }
 const OPEN_LOADING = "OPEN_LOADING"
 const CLOSE_LOADING = "CLOSE_LOADING"
@@ -91,12 +92,6 @@ const open = (id?: string) => {
 const close = (id?: string) => {
     DeviceEventEmitter.emit(buildCloseName(id))
 }
-
-
-Loading.open = open
-Loading.close = close
-
-
 export function addLoading<T extends (...args: any[]) => Promise<any>>(fn: T, id?: string) {
     return async (...args: Parameters<T>) => {
         try {
@@ -108,4 +103,7 @@ export function addLoading<T extends (...args: any[]) => Promise<any>>(fn: T, id
     }
 }
 
+Loading.open = open
+Loading.close = close
+Loading.add = addLoading
 export default Loading

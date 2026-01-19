@@ -136,10 +136,12 @@ interface I_ModalProps {
     ignoreKeyboardHeight?: boolean
 
     modalContainerStyle?: StyleProp<ViewStyle>
+
+    dismissModalWhenClose?: boolean
 }
 export function Modal(props: PropsWithChildren<I_ModalProps>) {
 
-    const { children, show, modalContainerStyle, ignoreKeyboardHeight } = props;
+    const { children, show, modalContainerStyle, ignoreKeyboardHeight, dismissModalWhenClose } = props;
     const opacity = useSharedValue(0);
     const { height: windowHeight } = useWindowDimensions()
     const viewPaddingBottom = useSharedValue(0)
@@ -197,9 +199,13 @@ export function Modal(props: PropsWithChildren<I_ModalProps>) {
             onModalClosed()
         }
         return () => {
-            requestAnimationFrame(() => {
-                Keyboard.dismiss()
-            })
+
+            if (dismissModalWhenClose) {
+                requestAnimationFrame(() => {
+                    Keyboard.dismiss()
+                })
+            }
+
         }
     }, [show])
 
@@ -214,11 +220,11 @@ export function Modal(props: PropsWithChildren<I_ModalProps>) {
                             contentContainerStyle={{ paddingBottom: ignoreKeyboardHeight ? 0 : keyboardHeight }}
                             bounces={false}
                         >
-                            <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-                                <Animated.View style={[animatedStyles, styles.modalContainer, modalContainerStyle,]}>
-                                    {children}
-                                </Animated.View>
-                            </TouchableWithoutFeedback>
+                            {/* <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}> */}
+                            <Animated.View style={[animatedStyles, styles.modalContainer, modalContainerStyle,]}>
+                                {children}
+                            </Animated.View>
+                            {/* </TouchableWithoutFeedback> */}
                         </ScrollView>
                     </Portal>
                 )

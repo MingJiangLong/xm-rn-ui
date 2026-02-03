@@ -10,22 +10,11 @@ const CLOSE_OBSERVER_MODAL = "__CLOSE_OBSERVER_MODAL__"
 const buildOpenName = (id?: string) => `${OPEN_OBSERVER_MODAL}__${id}`
 const buildCloseName = (id?: string) => `${CLOSE_OBSERVER_MODAL}__${id}`
 interface I_ModalProviderProps { }
-
-
-const ModalContext = createContext({
-    loadingCount: 0,
-    noticeCount: 0,
-    modalCount: 0,
-    updateNoticeCount: () => { }
-})
 export function ModalProvider(props: PropsWithChildren<I_ModalProviderProps>) {
     const { children } = props;
     return (
         <Host>
-            {/* <ModalContext.Provider value={{}}> */}
-
             {children}
-            {/* </ModalContext.Provider> */}
         </Host>
     )
 }
@@ -149,7 +138,7 @@ export function Modal(props: PropsWithChildren<I_ModalProps>) {
     const [showModal, setShowModal] = useState(false);
 
     const animatedStyles = useAnimatedStyle(() => ({
-        opacity: opacity.value,
+        opacity: opacity.get(),
         height: windowHeight,
         paddingBottom: ignoreKeyboardHeight ? 0 : viewPaddingBottom.value
     }));
@@ -157,11 +146,11 @@ export function Modal(props: PropsWithChildren<I_ModalProps>) {
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (e) => {
             setKeyboardHeight(e.endCoordinates.height);
-            viewPaddingBottom.value = withSpring(e.endCoordinates.height)
+            viewPaddingBottom.set(withSpring(e.endCoordinates.height))
         });
         const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
             setKeyboardHeight(0)
-            viewPaddingBottom.value = withSpring(0)
+            viewPaddingBottom.set(withSpring(0))
         });
 
         return () => {
@@ -173,7 +162,7 @@ export function Modal(props: PropsWithChildren<I_ModalProps>) {
     const onModalOpened = () => {
         setShowModal(true)
         requestAnimationFrame(() => {
-            opacity.value = withSpring(1)
+            opacity.set(withSpring(1))
         })
     }
 
@@ -220,11 +209,9 @@ export function Modal(props: PropsWithChildren<I_ModalProps>) {
                             contentContainerStyle={{ paddingBottom: ignoreKeyboardHeight ? 0 : keyboardHeight }}
                             bounces={false}
                         >
-                            {/* <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}> */}
                             <Animated.View style={[animatedStyles, styles.modalContainer, modalContainerStyle,]}>
                                 {children}
                             </Animated.View>
-                            {/* </TouchableWithoutFeedback> */}
                         </ScrollView>
                     </Portal>
                 )

@@ -1,10 +1,11 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import {
     StyleProp,
     Text,
     ViewStyle,
     ActivityIndicator,
     TextStyle,
+    AccessibilityRole,
 } from "react-native";
 
 import {
@@ -79,6 +80,8 @@ interface I_ButtonProps {
     debounceTime?: number;
     /** 按钮是否处于加载状态 */
     loading?: boolean;
+
+    accessibilityRole?: AccessibilityRole
 }
 
 const ANIMATION_CONFIG = {
@@ -99,6 +102,7 @@ export const Button = React.memo(function Button(props: I_ButtonProps) {
         accessibilityLabel,
         accessibilityHint,
         debounceTime = 300,
+        accessibilityRole = "button"
     } = props;
     const theme = React.useContext(ButtonThemeContext);
     const isDisabled = disabled || loading;
@@ -118,7 +122,7 @@ export const Button = React.memo(function Button(props: I_ButtonProps) {
 
     const getLoadingColor = () => {
         if (theme?.loadingColor?.[variant]) return theme?.loadingColor[variant];
-        return "#FFF"
+        return "#FFFFFF"
     }
     const handlePress = useCallback((event: GestureStateChangeEvent<TapGestureHandlerEventPayload>) => {
         if (isDisabled || !onPress) return;
@@ -147,17 +151,18 @@ export const Button = React.memo(function Button(props: I_ButtonProps) {
         });
 
     const animatedStyle = useAnimatedStyle(() => ({
-        opacity: opacity.value,
-        transform: [{ scale: scale.value }],
+        opacity: opacity.get(),
+        transform: [{ scale: scale.get() }],
     }));
     const buttonStyle: StyleProp<ViewStyle> = [
         styles.baseContainer,
-        getVariantStyle(), // 应用动态 variant
+        getVariantStyle(),
         getVariantSizeStyle(),
-        isDisabled && styles.disabled,
         animatedStyle,
         style,
     ];
+
+
 
     return (
         <GestureDetector gesture={tap}>
@@ -166,7 +171,7 @@ export const Button = React.memo(function Button(props: I_ButtonProps) {
                 accessible={accessible}
                 accessibilityLabel={accessibilityLabel}
                 accessibilityHint={accessibilityHint}
-                accessibilityRole="button"
+                accessibilityRole={accessibilityRole}
                 accessibilityState={{ disabled: isDisabled }}
             >
                 {

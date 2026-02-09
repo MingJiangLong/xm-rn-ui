@@ -1,20 +1,31 @@
-import { createContext, FC, PropsWithChildren, use, useEffect, useRef, useState } from "react";
+import { createContext, FC, PropsWithChildren, useEffect, useRef, useState } from "react";
 import { Host, Portal } from "react-native-portalize";
 import React from 'react'
-import { ViewStyle, StyleProp, Keyboard, DeviceEventEmitter, StyleSheet, useWindowDimensions, ScrollView, TouchableWithoutFeedback } from "react-native";
+import { ViewStyle, StyleProp, Keyboard, DeviceEventEmitter, StyleSheet, useWindowDimensions, ScrollView, View, Platform, } from "react-native";
 import Animated, { AnimatableValue, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
-import { runOnJS } from 'react-native-worklets'
+import { runOnJS, runOnRuntime } from 'react-native-worklets'
 const OPEN_OBSERVER_MODAL = "__OPEN_OBSERVER_MODAL__"
 const CLOSE_OBSERVER_MODAL = "__CLOSE_OBSERVER_MODAL__"
 
 const buildOpenName = (id?: string) => `${OPEN_OBSERVER_MODAL}__${id}`
 const buildCloseName = (id?: string) => `${CLOSE_OBSERVER_MODAL}__${id}`
 interface I_ModalProviderProps { }
+
+
+const ModalContext = createContext({
+    loadingCount: 0,
+    noticeCount: 0,
+    modalCount: 0,
+    updateNoticeCount: () => { }
+})
 export function ModalProvider(props: PropsWithChildren<I_ModalProviderProps>) {
     const { children } = props;
     return (
         <Host>
+            {/* <ModalContext.Provider value={{}}> */}
+
             {children}
+            {/* </ModalContext.Provider> */}
         </Host>
     )
 }
@@ -120,40 +131,44 @@ export const ObserverModal = ObserverModalFn
 interface I_ModalProps {
     show?: boolean
     onClose?: () => void
-
-    /** 有些modal可能不需要计算键盘高度 */
-    ignoreKeyboardHeight?: boolean
+    /** 部分Modal可能不需要在键盘弹起时自动滚动 */
+    adjustKeyboardHeight?: boolean
 
     modalContainerStyle?: StyleProp<ViewStyle>
-
-    dismissModalWhenClose?: boolean
 }
 export function Modal(props: PropsWithChildren<I_ModalProps>) {
 
-    const { children, show, modalContainerStyle, ignoreKeyboardHeight, dismissModalWhenClose } = props;
+    const scrollViewRef = useRef<ScrollView>(null)
+    const { children, show, modalContainerStyle, adjustKeyboardHeight = true } = props;
     const opacity = useSharedValue(0);
-    const { height: windowHeight } = useWindowDimensions()
     const viewPaddingBottom = useSharedValue(0)
-    const [keyboardHeight, setKeyboardHeight] = useState(0)
     const [showModal, setShowModal] = useState(false);
-
+    const scrollHeight = useSharedValue(0)
     const animatedStyles = useAnimatedStyle(() => ({
-        opacity: opacity.get(),
-        height: windowHeight,
-        paddingBottom: ignoreKeyboardHeight ? 0 : viewPaddingBottom.value
+        opacity: opacity.value,
+        height: scrollHeight.value,
     }));
+
+
+
 
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (e) => {
-            setKeyboardHeight(e.endCoordinates.height);
-            viewPaddingBottom.set(withSpring(e.endCoordinates.height))
+            viewPaddingBottom.value = e.endCoordinates.height
+            if (adjustKeyboardHeight) {
+                scrollViewRef.current?.scrollToEnd()
+            }
         });
+
+        const keyboardDidChangeFrame = Keyboard.addListener("keyboardWillHide", (e) => {
+            viewPaddingBottom.value = 0;
+        })
         const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-            setKeyboardHeight(0)
-            viewPaddingBottom.set(withSpring(0))
+            viewPaddingBottom.value = 0
         });
 
         return () => {
+            keyboardDidChangeFrame.remove();
             keyboardDidShowListener.remove();
             keyboardDidHideListener.remove();
         };
@@ -162,7 +177,7 @@ export function Modal(props: PropsWithChildren<I_ModalProps>) {
     const onModalOpened = () => {
         setShowModal(true)
         requestAnimationFrame(() => {
-            opacity.set(withSpring(1))
+            opacity.value = withSpring(1)
         })
     }
 
@@ -174,10 +189,20 @@ export function Modal(props: PropsWithChildren<I_ModalProps>) {
         setShowModal(false)
     }
     const onModalClosed = () => {
-        opacity.value = withSpring(0, {}, (finished, current) => {
+        opacity.value = withSpring(0, {
+            mass: 1
+        }, (finished, current) => {
             runOnJS(closeCallback)(finished, current)
         })
     }
+
+    const positionViewStyle = useAnimatedStyle(() => {
+        return {
+            height: viewPaddingBottom.value
+        }
+    })
+
+
 
     useEffect(() => {
         if (show) {
@@ -188,30 +213,34 @@ export function Modal(props: PropsWithChildren<I_ModalProps>) {
             onModalClosed()
         }
         return () => {
-
-            if (dismissModalWhenClose) {
-                requestAnimationFrame(() => {
-                    Keyboard.dismiss()
-                })
-            }
-
+            requestAnimationFrame(() => {
+                Keyboard.dismiss()
+            })
         }
     }, [show])
-
 
     return (
         <>
             {
-                !!showModal && (
+                (!!showModal) && (
                     <Portal>
                         <ScrollView
-                            keyboardShouldPersistTaps="always"
-                            contentContainerStyle={{ paddingBottom: ignoreKeyboardHeight ? 0 : keyboardHeight }}
+                            keyboardShouldPersistTaps="never"
+                            onLayout={(e) => {
+                                scrollHeight.value = e.nativeEvent.layout.height
+                            }}
+                            style={{ flex: 1, }}
+                            showsVerticalScrollIndicator={false}
+
                             bounces={false}
+                            ref={scrollViewRef}
                         >
                             <Animated.View style={[animatedStyles, styles.modalContainer, modalContainerStyle,]}>
-                                {children}
+                                {
+                                    show && children
+                                }
                             </Animated.View>
+                            <Animated.View style={positionViewStyle} />
                         </ScrollView>
                     </Portal>
                 )

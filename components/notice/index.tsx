@@ -1,7 +1,7 @@
 import { FC, useEffect, useState, cloneElement, ReactElement, useRef, useMemo } from "react";
-import { Modal } from "../modal/modal.component";
 import { DeviceEventEmitter, StyleProp, ViewStyle, } from "react-native";
 import React from 'react'
+import { Modal } from "../modal";
 
 const OPEN_NOTICE = "OPEN_NOTICE"
 const CLOSE_NOTICE = "CLOSE_NOTICE"
@@ -102,7 +102,7 @@ const Notice: I_Notice = (props) => {
 
     }, [message])
     return (
-        <Modal show={show} modalContainerStyle={[modalContainerStyle, moreModalContainerStyle]} ignoreKeyboardHeight={true}>
+        <Modal show={show} modalContainerStyle={[modalContainerStyle, moreModalContainerStyle]} adjustKeyboardHeight={false}>
             {childrenNode}
         </Modal>
     )

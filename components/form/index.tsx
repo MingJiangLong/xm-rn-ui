@@ -9,84 +9,6 @@ import React, {
     useState
 } from "react";
 
-/**
- * Advanced Form System for React Native
- *
- * Features:
- * - Type-safe form state management
- * - Declarative validation with async support
- * - Field-level validation and error handling
- * - Performance optimized with minimal re-renders
- * - Built-in common validation rules
- * - Form submission helpers
- * - Touch state tracking
- * - Validation state tracking
- *
- * Basic Usage:
- *
- * ```tsx
- * function LoginForm() {
- *   const form = useCreateForm({
- *     email: '',
- *     password: '',
- *   });
- *
- *   const handleSubmit = async () => {
- *     const result = await submitForm(form, async (values) => {
- *       // Submit to API
- *       return await api.login(values);
- *     });
- *
- *     if (result) {
- *       // Success
- *     }
- *   };
- *
- *   return (
- *     <Form form={form}>
- *       <FormItem
- *         name="email"
- *         rules={[required(), email()]}
- *       >
- *         <EmailInput />
- *       </FormItem>
- *
- *       <FormItem
- *         name="password"
- *         rules={[required(), minLength(6)]}
- *       >
- *         <PasswordInput />
- *       </FormItem>
- *
- *       <Button onPress={handleSubmit} disabled={!form.isValid()}>
- *         Login
- *       </Button>
- *     </Form>
- *   );
- * }
- * ```
- *
- * Custom Input Component:
- *
- * ```tsx
- * function CustomInput() {
- *   const { value, error, onChange, onBlur, touched } = useFormItem();
- *
- *   return (
- *     <View>
- *       <TextInput
- *         value={value}
- *         onChangeText={onChange}
- *         onBlur={onBlur}
- *       />
- *       {touched && error && <Text style={{color: 'red'}}>{error.message}</Text>}
- *     </View>
- *   );
- * }
- * ```
- */
-
-// Types
 type ValidationFunction<T = any> = (value: T) => boolean | Promise<boolean>;
 
 interface ValidationRule<T = any> {
@@ -136,7 +58,7 @@ export function useCreateForm(initialValues: Record<string, any> = {}): FormStat
     });
 
     const triggerRefresh = useCallback(() => {
-        setRefreshTrigger(prev => (prev + 1) % 1000);
+        setRefreshTrigger(prev => (prev + 1));
     }, []);
 
     // Actions
@@ -460,13 +382,15 @@ export function useForm(): ReturnType<typeof useCreateForm> {
 }
 
 // Utility functions
-export const createValidationRule = <T = any>(
+export const createValidationRule = function <T>(
     validator: ValidationFunction<T>,
     errorMessage?: string
-): ValidationRule<T> => ({
-    passWhen: validator,
-    errorMessage,
-});
+): ValidationRule<T> {
+    return {
+        passWhen: validator,
+        errorMessage,
+    }
+};
 
 // Common validation rules
 export const required = (errorMessage = "This field is required"): ValidationRule =>
@@ -521,5 +445,16 @@ export async function submitForm<T = any>(
         }
         return null;
     }
+}
+
+
+export const FormRules = {
+    required,
+    minLength,
+    maxLength,
+    pattern,
+    email,
+    numeric,
+    createValidationRule
 }
 

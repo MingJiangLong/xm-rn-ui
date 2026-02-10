@@ -1,6 +1,6 @@
 import { FC, useEffect, useState, PropsWithChildren, useRef } from "react";
-import { Modal } from "../modal/modal.component";
 import { DeviceEventEmitter, StyleProp, ViewStyle, } from "react-native";
+import { Modal } from "../modal";
 interface I_Loading extends FC<PropsWithChildren<
     {
         id?: string
@@ -77,7 +77,7 @@ const Loading: I_Loading = (props) => {
     useEffect(addListener, [])
     useEffect(onLoadingCountChange, [loadingCount])
     return (
-        <Modal show={loading} modalContainerStyle={modalContainerStyle} ignoreKeyboardHeight>
+        <Modal show={loading} modalContainerStyle={modalContainerStyle} adjustKeyboardHeight={false}>
             {children}
         </Modal>
     )

@@ -2,15 +2,16 @@ import { createContext, memo, PropsWithChildren, useContext, useMemo } from "rea
 import { useWindowDimensions } from "react-native";
 
 interface UIScreenContextValue {
-    designWidth: number;
-    designHeight: number;
-    screenWidth: number;
-    screenHeight: number;
+    scaleX: number
+    scaleY: number
 }
 
 const UIScreenContext = createContext<UIScreenContextValue | null>(null);
 
-type UIScreenProviderProps = PropsWithChildren<Partial<UIScreenContextValue>>;
+type UIScreenProviderProps = PropsWithChildren<{
+    designPixelWidth?: number;
+    designPixelHeight?: number;
+}>;
 
 const DEFAULT_DESIGN_WIDTH = 375;
 const DEFAULT_DESIGN_HEIGHT = 812;
@@ -18,19 +19,17 @@ const DEFAULT_DESIGN_HEIGHT = 812;
 export const UIScreenProvider = memo(
     function UIScreenProvider({
         children,
-        designWidth = DEFAULT_DESIGN_WIDTH,
-        designHeight = DEFAULT_DESIGN_HEIGHT,
+        designPixelWidth = DEFAULT_DESIGN_WIDTH,
+        designPixelHeight = DEFAULT_DESIGN_HEIGHT,
     }: UIScreenProviderProps) {
-        const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+        const { width: screenDpWidth, height: screenDpHeight } = useWindowDimensions();
 
         const value = useMemo(
             () => ({
-                designWidth,
-                designHeight,
-                screenWidth,
-                screenHeight,
+                scaleX: screenDpWidth / designPixelWidth,
+                scaleY: screenDpHeight / designPixelHeight,
             }),
-            [designWidth, designHeight, screenWidth, screenHeight]
+            [designPixelWidth, designPixelHeight, screenDpWidth, screenDpHeight]
         );
 
         return (

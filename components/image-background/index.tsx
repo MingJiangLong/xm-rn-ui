@@ -1,12 +1,12 @@
-import { Image as RnImage, type ImageProps as RnImageProps } from 'react-native'
+import { ImageBackground as RnImageBackground, type ImageProps as RnImageProps } from 'react-native'
 import { useUIScreen } from '../../provider/ui-screen.provider'
 import { memo, useMemo } from 'react';
 
-type ImageProps = RnImageProps & {
+type ImageBackgroundProps = RnImageProps & {
     pixelWidth?: number, pixelHeight?: number, scaleBy?: "width" | "height"
 }
-export const Image = memo(
-    function Image(props: ImageProps) {
+export const ImageBackground = memo(
+    function ImageBackground(props: ImageBackgroundProps) {
 
         const { pixelWidth, pixelHeight, style, scaleBy = "width", ...rest } = props
         const {
@@ -28,12 +28,12 @@ export const Image = memo(
             };
         }, [pixelWidth, pixelHeight, scaleBy, scaleX, scaleY]);
 
-
         const styles = useMemo(() => {
             return [computedSize, style]
         }, [computedSize, style])
+
         return (
-            <RnImage {...rest} style={styles} />
+            <RnImageBackground {...rest} style={styles} />
         )
     }
 )
